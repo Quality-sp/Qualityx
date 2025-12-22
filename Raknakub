@@ -7,56 +7,95 @@ local TweenService         = game:GetService("TweenService")
 local HttpService          = game:GetService("HttpService")
 local TeleportService      = game:GetService("TeleportService")
 local Debris               = game:GetService("Debris")
+local CoreGui = game:GetService("CoreGui")
+
 
 --// Client References
 local LocalPlayer = Players.LocalPlayer
 local Camera      = workspace.CurrentCamera
 
 
-local holdingJump = false
-
--- UI Initialization
-local WindUI = loadstring(
-    game:HttpGet(
-        'https://github.com/Footagesus/WindUI/releases/latest/download/main.lua'
-    )
-)()
-
-local Icons = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Footagesus/Icons/main/Main.lua"))()
-
-Icons.SetIconsType("lucide") -- lucide, craft and more...
-
-local HouseIcon = Icons.Icon("house")
-
-local ImageLabel = Instance.new("ImageLabel")
-ImageLabel.Image = HouseIcon[1]
-ImageLabel.ImageRectSize = HouseIcon[2].ImageRectSize
-ImageLabel.ImageRectOffset = HouseIcon[2].ImageRectPosition
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+ 
 
 local Window = WindUI:CreateWindow({
-	Title = "Quality x Premium [Blockspin]​",
-	Icon = 'mountain-snow',
-	Author = 'by Quality dek gen z',
-	Folder = 'MySuperHub',
-	Size = UDim2.fromOffset(400, 400),
-	MinSize = Vector2.new(560, 350),
-	MaxSize = Vector2.new(850, 560),
-	Transparent = true,
-	Theme = 'Dark',
-	Resizable = true,
-	SideBarWidth = 200,
-	BackgroundImageTransparency = 0.42,
-	HideSearchBar = false,
-	ScrollBarEnabled = false,
-	OpenButton = {
-		Title = "Kunlun's",
-		CornerRadius = UDim.new(1, 0),
-		StrokeThickness = 3,
-		Enabled = true,
-		Draggable = true,
-		OnlyMobile = false,
-	},
+    Title = "Quality x Premium [Blockspin]​",
+    Icon = "rbxassetid://138614699274576",
+    Author = "Quality Dek Gen z eiei",
+    Folder = "MySuperHub",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
+    MaxSize = Vector2.new(850, 560),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+    User = {
+        Enabled = true,
+        Anonymous = false,
+        Name = LocalPlayer.Name,
+        Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId,
+        Callback = function() end,
+    },
 })
+
+Window:EditOpenButton({ Enabled = false })
+
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleBtn = Instance.new("ImageButton")
+
+ScreenGui.Name = "WindUI_Toggle"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleBtn.BackgroundTransparency = 1
+ToggleBtn.Image = "rbxassetid://138614699274576" 
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+
+local opened = true
+
+local function toggle()
+    opened = not opened
+    if Window.UI then
+        Window.UI.Enabled = opened
+    else
+        Window:Toggle()
+    end
+end
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    ToggleBtn:TweenSize(
+        UDim2.new(0, 56, 0, 56),
+        Enum.EasingDirection.Out,
+        Enum.EasingStyle.Quad,
+        0.12,
+        true,
+        function()
+            ToggleBtn:TweenSize(
+                UDim2.new(0, 50, 0, 50),
+                Enum.EasingDirection.Out,
+                Enum.EasingStyle.Quad,
+                0.12,
+                true
+            )
+        end
+    )
+    toggle()
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.T then
+        toggle()
+    end
+end)
 
 
 local CombatTab = Window:Tab({
