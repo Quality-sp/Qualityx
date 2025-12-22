@@ -517,13 +517,11 @@ Esptab:Toggle({
 	end  -- ปิด Callback function
 })  -- ปิด table ของ Toggle
 
-local Playertab = Window:Tab({
+local PlayerTab = Window:Tab({
 	Title = "Player",
 	Icon = "user",
 })
 
-	Title = 'Player Modifier:'
-})
 
 local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
