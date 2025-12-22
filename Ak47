@@ -634,7 +634,6 @@ end)
 -- ตั้งค่าตัวแปรเริ่มต้น
 EnabledInfiniteStamina = false
 
--- สร้าง toggle บนเมนู
 PlayerTab:Toggle({
 	Title = 'Infinite Stamina',
 	Type = 'Checkbox',
@@ -644,16 +643,15 @@ PlayerTab:Toggle({
 	end,
 })
 
--- เก็บฟังก์ชันเดิมของ SprintBar.update ไว้
-local OldUpdate = SprintBar.update
+-- 🔴 ต้องวางตรงนี้เท่านั้น
+-- เช็กก่อนว่า SprintBar มีจริง
+if typeof(SprintBar) == "table" and SprintBar.update then
+	local OldUpdate = SprintBar.update
 
--- เขียนฟังก์ชันใหม่แทนที่
-SprintBar.update = function(...)
-	if EnabledInfiniteStamina then
-        -- ถ้าเปิดโหมด Infinite Stamina ให้คืนค่าเต็ม (1)
-		return 1
-	else
-        -- ถ้าปิด ให้ทำงานตามปกติ
+	SprintBar.update = function(...)
+		if EnabledInfiniteStamina then
+			return 1
+		end
 		return OldUpdate(...)
 	end
 end
