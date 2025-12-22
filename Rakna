@@ -1,0 +1,256 @@
+--// Core Services
+local Players              = game:GetService("Players")
+local RunService           = game:GetService("RunService")
+local UserInputService     = game:GetService("UserInputService")
+local ReplicatedStorage    = game:GetService("ReplicatedStorage")
+local TweenService         = game:GetService("TweenService")
+local HttpService          = game:GetService("HttpService")
+local TeleportService      = game:GetService("TeleportService")
+local Debris               = game:GetService("Debris")
+
+--// Client References
+local LocalPlayer = Players.LocalPlayer
+local Camera      = workspace.CurrentCamera
+
+
+local holdingJump = false
+
+-- UI Initialization
+local WindUI = loadstring(
+    game:HttpGet(
+        'https://github.com/Footagesus/WindUI/releases/latest/download/main.lua'
+    )
+)()
+
+local Icons = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Footagesus/Icons/main/Main.lua"))()
+
+Icons.SetIconsType("lucide") -- lucide, craft and more...
+
+local HouseIcon = Icons.Icon("house")
+
+local ImageLabel = Instance.new("ImageLabel")
+ImageLabel.Image = HouseIcon[1]
+ImageLabel.ImageRectSize = HouseIcon[2].ImageRectSize
+ImageLabel.ImageRectOffset = HouseIcon[2].ImageRectPosition
+
+local Window = WindUI:CreateWindow({
+	Title = "Quality x Premium [Blockspin]​",
+	Icon = 'mountain-snow',
+	Author = 'by Quality dek gen z',
+	Folder = 'MySuperHub',
+	Size = UDim2.fromOffset(400, 400),
+	MinSize = Vector2.new(560, 350),
+	MaxSize = Vector2.new(850, 560),
+	Transparent = true,
+	Theme = 'Dark',
+	Resizable = true,
+	SideBarWidth = 200,
+	BackgroundImageTransparency = 0.42,
+	HideSearchBar = false,
+	ScrollBarEnabled = false,
+	OpenButton = {
+		Title = "Kunlun's",
+		CornerRadius = UDim.new(1, 0),
+		StrokeThickness = 3,
+		Enabled = true,
+		Draggable = true,
+		OnlyMobile = false,
+	},
+})
+
+
+local CombatTab = Window:Tab({
+	Title = "Combat",
+	Icon = "swords",
+})
+
+local SilentAimEnabled = false
+local FOVRadius = 120
+local CurrentTarget = nil
+local WallbangEnabled = false          -- << NEW
+local ShowFOVEnabled = false           -- << NEW
+
+local SilentFOVCircle = Drawing.new("Circle")
+SilentFOVCircle.Color = Color3.fromRGB(255, 255, 0)
+SilentFOVCircle.Thickness = 1.5
+SilentFOVCircle.NumSides = 64
+SilentFOVCircle.Filled = false
+SilentFOVCircle.Transparency = 1
+SilentFOVCircle.Radius = FOVRadius
+SilentFOVCircle.Visible = false
+
+local Tracer = Drawing.new("Line")
+Tracer.Thickness = 1.5
+Tracer.Color = Color3.fromRGB(124, 252, 0)
+Tracer.Transparency = 1
+Tracer.Visible = false
+
+-- -------------------------------------------------
+-- Helper functions (unchanged)
+-- -------------------------------------------------
+local function getPing()
+	local stats = LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("NetworkStats")
+	if stats then
+		local pingText = stats:FindFirstChild("PingLabel")
+		if pingText then
+			local ping = tonumber(pingText.Text:match("%d+"))
+			return ping and ping / 1000 or 0.2
+		end
+	end
+	return 0.2
+end
+
+local function getClosestTarget()
+	local closest = nil
+	local shortestDistance = math.huge
+	local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+			local head = player.Character.Head
+			local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
+			if onScreen then
+				local screenPos = Vector2.new(pos.X, pos.Y)
+				local distFromCenter = (screenPos - center).Magnitude
+				if distFromCenter <= FOVRadius then
+					local toTarget = (head.Position - Camera.CFrame.Position).Unit
+					local forward = Camera.CFrame.LookVector
+					local dot = forward:Dot(toTarget)
+					if dot > 0.5 then
+						local distance3D = (head.Position - LocalPlayer.Character.Head.Position).Magnitude
+						if distance3D < shortestDistance then
+							shortestDistance = distance3D
+							closest = player
+						end
+					end
+				end
+			end
+		end
+	end
+	return closest
+end
+
+local function predictPosition(head, hrp)
+	local ping = getPing()
+	local velocity = hrp and hrp.Velocity or Vector3.zero
+	return head.Position + (velocity * ping * 1.15)
+end
+
+-- -------------------------------------------------
+-- Render loop – now respects the new toggles
+-- -------------------------------------------------
+RunService.RenderStepped:Connect(function()
+    -- FOV circle visibility
+	SilentFOVCircle.Visible = SilentAimEnabled and ShowFOVEnabled
+	SilentFOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+	SilentFOVCircle.Radius = FOVRadius
+	if SilentAimEnabled then
+		CurrentTarget = getClosestTarget()
+	else
+		CurrentTarget = nil
+	end
+	if CurrentTarget and CurrentTarget.Character and CurrentTarget.Character:FindFirstChild("Head") then
+		local targetHead = CurrentTarget.Character.Head
+		local myHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+		if myHead then
+			local myScreenPos, myOnScreen = Camera:WorldToViewportPoint(myHead.Position)
+			local targetScreenPos, targetOnScreen = Camera:WorldToViewportPoint(targetHead.Position)
+			if myOnScreen and targetOnScreen then
+				Tracer.Visible = true
+				Tracer.From = Vector2.new(myScreenPos.X, myScreenPos.Y)
+				Tracer.To = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
+			else
+				Tracer.Visible = false
+			end
+		end
+	else
+		Tracer.Visible = false
+	end
+end)
+
+local oldFire
+oldFire = hookfunction(game:GetService("ReplicatedStorage").Remotes.Send.FireServer, function(self, ...)
+	local args = {
+		...
+	}
+	if SilentAimEnabled and args[2] == "shoot_gun" and CurrentTarget then
+		local head = CurrentTarget.Character and CurrentTarget.Character:FindFirstChild("Head")
+		local hrp = CurrentTarget.Character and CurrentTarget.Character:FindFirstChild("HumanoidRootPart")
+		if head then
+			local aimPos = predictPosition(head, hrp)
+
+			args[4] = CFrame.new(LocalPlayer.Character.Head.Position, aimPos)
+			args[4] = CFrame.new(math.huge, math.huge, math.huge)
+			args[5] = {
+				[1] = {
+					[1] = {
+						["Instance"] = head,
+						["Normal"] = Vector3.new(0, 1, 0),
+						["Position"] = aimPos
+					}
+				}
+			}
+
+			local beam = Instance.new("Part", workspace)
+			beam.Anchored = true
+			beam.CanCollide = false
+			beam.Size = Vector3.new(0.15, 0.15, (aimPos - LocalPlayer.Character.Head.Position).Magnitude)
+			beam.CFrame = CFrame.new(LocalPlayer.Character.Head.Position, aimPos) * CFrame.new(0, 0, -beam.Size.Z / 2)
+			beam.Color = Color3.fromRGB(255, 50, 50)
+			beam.Material = Enum.Material.Neon
+			beam.Transparency = 0.25
+			game:GetService("Debris"):AddItem(beam, 0.15)
+		end
+	end
+	return oldFire(self, unpack(args))
+end)
+
+
+-- -------------------------------------------------
+-- UI Controls
+-- -------------------------------------------------
+CombatTab:Toggle({
+	Title = "Silent Aim",
+	Desc = "bullet to the head",
+	Icon = "check",
+	Type = "Checkbox",
+	Default = false,
+	Callback = function(state)
+		SilentAimEnabled = state
+	end
+})
+
+CombatTab:Toggle({                     -- << NEW
+	Title = "Show FOV",
+	Desc = "Circle",
+	Icon = "check",
+	Type = "Checkbox",
+	Default = false,
+	Callback = function(state)
+		ShowFOVEnabled = state
+	end
+})
+
+CombatTab:Toggle({                     -- << NEW
+	Title = "Wallbang",
+	Desc = "No collide bullet",
+	Icon = "check",
+	Type = "Checkbox",
+	Default = false,
+	Callback = function(state)
+		WallbangEnabled = state
+	end
+})
+
+CombatTab:Slider({
+	Title = "Fov Size: ",
+	Step = 1,
+	Value = {
+		Min = 20,
+		Max = 1000,
+		Default = FOVRadius,
+	},
+	Callback = function(value)
+		FOVRadius = tonumber(value) or 120
+	end
+})
+
