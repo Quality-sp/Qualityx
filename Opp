@@ -516,3 +516,9 @@ Esptab:Toggle({
 		end
 	end  -- ปิด Callback function
 })  -- ปิด table ของ Toggle
+
+local Playertab = Window:Tab({
+	Title = "Player",
+	Icon = "user",
+})
+
