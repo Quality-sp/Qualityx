@@ -288,3 +288,81 @@ local Esptab = Window:Tab({
 	Title = "esp",
 	Icon = "eye",
 })
+
+--// ESP NAME TOGGLE (ALL IN ONE)
+
+local ESP_ENABLED = false
+local ESP_LIST = {}
+
+local function CreateESP(player)
+	if player == game.Players.LocalPlayer then return end
+
+	local function Apply(character)
+		if not ESP_ENABLED then return end
+
+		local head = character:WaitForChild("Head", 5)
+		if not head then return end
+
+		if head:FindFirstChild("NameESP") then
+			head.NameESP:Destroy()
+		end
+
+		local gui = Instance.new("BillboardGui")
+		gui.Name = "NameESP"
+		gui.Adornee = head
+		gui.Size = UDim2.new(0, 200, 0, 50)
+		gui.StudsOffset = Vector3.new(0, 2.5, 0)
+		gui.AlwaysOnTop = true
+		gui.MaxDistance = math.huge
+		gui.Parent = head
+
+		local text = Instance.new("TextLabel")
+		text.Size = UDim2.new(1, 0, 1, 0)
+		text.BackgroundTransparency = 1
+		text.Text = player.Name
+		text.TextSize = 12
+		text.TextScaled = false
+		text.Font = Enum.Font.SourceSansBold
+		text.TextColor3 = Color3.fromRGB(255,255,255)
+		text.TextStrokeTransparency = 0
+		text.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+		text.Parent = gui
+
+		ESP_LIST[player] = gui
+	end
+
+	if player.Character then
+		Apply(player.Character)
+	end
+
+	player.CharacterAdded:Connect(Apply)
+end
+
+local function EnableESP()
+	for _, plr in ipairs(game.Players:GetPlayers()) do
+		CreateESP(plr)
+	end
+end
+
+local function DisableESP()
+	for _, gui in pairs(ESP_LIST) do
+		if gui and gui.Parent then
+			gui:Destroy()
+		end
+	end
+	table.clear(ESP_LIST)
+end
+
+
+Esptab:Toggle({
+	Title = "esp name",
+	Default = false,
+	Callback = function(v)
+		ESP_ENABLED = v
+		if v then
+			EnableESP()
+		else
+			DisableESP()
+		end
+	end
+})
