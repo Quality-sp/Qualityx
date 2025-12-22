@@ -249,7 +249,6 @@ end)
 -- -------------------------------------------------
 CombatTab:Toggle({
 	Title = "Silent Aim",
-	Icon = "check",
 	Default = false,
 	Callback = function(state)
 		SilentAimEnabled = state
@@ -258,7 +257,6 @@ CombatTab:Toggle({
 
 CombatTab:Toggle({                     -- << NEW
 	Title = "Show FOV",
-	Icon = "check",
 	Default = false,
 	Callback = function(state)
 		ShowFOVEnabled = state
@@ -266,8 +264,7 @@ CombatTab:Toggle({                     -- << NEW
 })
 
 CombatTab:Toggle({                     -- << NEW
-	Title = "Wallbang",
-	Icon = "check",
+	Title = "Super Bullet",
 	Default = false,
 	Callback = function(state)
 		WallbangEnabled = state
