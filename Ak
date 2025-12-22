@@ -522,3 +522,140 @@ local Playertab = Window:Tab({
 	Icon = "user",
 })
 
+	Title = 'Player Modifier:'
+})
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+
+-- ประกาศตัวแปรทั้งหมดไว้ข้างนอก
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Humanoid
+local RootPart
+
+-- ตัวแปรควบคุม
+local EnabledSpeed = false
+local SpeedValue = 16
+
+-- Function สำหรับ setup character
+local function SetupCharacter(char)
+	Character = char
+	Humanoid = char:WaitForChild('Humanoid')
+	RootPart = char:WaitForChild('HumanoidRootPart')
+	
+	-- รีเซ็ตค่าเมื่อ spawn ใหม่
+	if EnabledSpeed then
+		Humanoid.WalkSpeed = SpeedValue
+	end
+end
+
+-- เชื่อมต่อครั้งเดียว
+Player.CharacterAdded:Connect(SetupCharacter)
+
+-- Setup ตัวละครปัจจุบัน (ถ้ามี)
+if Player.Character then
+	SetupCharacter(Player.Character)
+end
+
+-- Loop อัปเดตความเร็ว
+task.spawn(function()
+	while task.wait(0.05) do -- ลดเวลารอให้เร็วขึ้น
+		if Humanoid and EnabledSpeed then
+			Humanoid.WalkSpeed = SpeedValue
+		end
+	end
+end)
+
+-- Toggles & Sliders
+PlayerTab:Toggle({
+	Title = 'Walk Speed',
+	Icon = 'check',
+	Type = 'Checkbox',
+	Value = false,
+	Callback = function(Value)
+		EnabledSpeed = Value
+		if Humanoid then
+			Humanoid.WalkSpeed = Value and SpeedValue or 16
+		end
+	end,
+})
+
+MainTab:Slider({
+	Title = 'Speed Value',
+	Step = 1,
+	Value = {
+		Min = 8,
+		Max = 35,
+		Default = 16
+	},
+	Callback = function(Value)
+		SpeedValue = Value
+		if Humanoid and EnabledSpeed then
+			Humanoid.WalkSpeed = Value
+		end
+	end,
+})
+-- 🔹 ตัวแปรเก็บสถานะการเปิด Fly Jump
+local EnabledFlyJump = false
+
+PlayerTab:Toggle({
+	Title = 'Fly Jump',
+	Type = 'Checkbox',
+	Value = false,
+	Callback = function(Value)
+		EnabledFlyJump = Value
+	end,
+})
+
+-- 🔹 Event กด Space (กระโดด)
+UserInputService.JumpRequest:Connect(function()
+	if not EnabledFlyJump or not RootPart then
+		return
+	end
+	holdingJump = true
+	task.spawn(function()
+		while holdingJump and EnabledFlyJump do
+			RunService.Heartbeat:Wait()
+			if RootPart then
+				RootPart.Velocity =
+                    Vector3.new(RootPart.Velocity.X, 30, RootPart.Velocity.Z)
+			else
+				break
+			end
+		end
+	end)
+end)
+
+-- 🔹 Event ปล่อยปุ่ม Space (หยุดบินขึ้น)
+UserInputService.InputEnded:Connect(function(input)
+	if input.KeyCode == Enum.KeyCode.Space then
+		holdingJump = false
+	end
+end)
+
+-- ตั้งค่าตัวแปรเริ่มต้น
+EnabledInfiniteStamina = false
+
+-- สร้าง toggle บนเมนู
+PlayerTab:Toggle({
+	Title = 'Infinite Stamina',
+	Type = 'Checkbox',
+	Value = false,
+	Callback = function(Value)
+		EnabledInfiniteStamina = Value
+	end,
+})
+
+-- เก็บฟังก์ชันเดิมของ SprintBar.update ไว้
+local OldUpdate = SprintBar.update
+
+-- เขียนฟังก์ชันใหม่แทนที่
+SprintBar.update = function(...)
+	if EnabledInfiniteStamina then
+        -- ถ้าเปิดโหมด Infinite Stamina ให้คืนค่าเต็ม (1)
+		return 1
+	else
+        -- ถ้าปิด ให้ทำงานตามปกติ
+		return OldUpdate(...)
+	end
+end
