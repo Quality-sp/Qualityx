@@ -284,3 +284,7 @@ CombatTab:Slider({
 	end
 })
 
+local Esptab = Window:Tab({
+	Title = "esp",
+	Icon = "eye",
+})
