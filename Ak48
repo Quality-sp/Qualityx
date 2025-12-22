@@ -578,7 +578,7 @@ PlayerTab:Toggle({
 	end,
 })
 
-MainTab:Slider({
+PlayerTab:Slider({
 	Title = 'Speed Value',
 	Step = 1,
 	Value = {
