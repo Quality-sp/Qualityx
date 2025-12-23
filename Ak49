@@ -1,18 +1,28 @@
---// Core Services
-local Players              = game:GetService("Players")
-local RunService           = game:GetService("RunService")
-local UserInputService     = game:GetService("UserInputService")
-local ReplicatedStorage    = game:GetService("ReplicatedStorage")
-local TweenService         = game:GetService("TweenService")
-local HttpService          = game:GetService("HttpService")
-local TeleportService      = game:GetService("TeleportService")
-local Debris               = game:GetService("Debris")
-local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService('ReplicatedStorage')
+local HttpService = game:GetService('HttpService')
+local PathfindingService = game:GetService('PathfindingService')
+local UserInputService = game:GetService('UserInputService')
+local Players = game:GetService('Players')
+local RunService = game:GetService('RunService')
+local CurrentCamera = workspace.CurrentCamera
+local Debris = game:GetService('Debris')
 
+local Players, RunService, Camera, LocalPlayer, Mouse =
+    game:GetService("Players"), game:GetService("RunService"),
+    workspace.CurrentCamera, game.Players.LocalPlayer, game.Players.LocalPlayer:GetMouse()
 
---// Client References
-local LocalPlayer = Players.LocalPlayer
-local Camera      = workspace.CurrentCamera
+local Net = require(ReplicatedStorage.Modules.Core.Net)
+local CharModule = require(ReplicatedStorage.Modules.Core.Char)
+local SprintModule = require(ReplicatedStorage.Modules.Game.Sprint)
+local CrateController = require(ReplicatedStorage.Modules.Game.CrateSystem.Crate)
+
+local Client = Players.LocalPlayer
+local Character = Client.Character or Client.CharacterAdded:Wait()
+local UserId = Client.UserId
+local PlayerGui = Client.PlayerGui
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+local Backpack = Client:WaitForChild("Backpack")
 
 
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
