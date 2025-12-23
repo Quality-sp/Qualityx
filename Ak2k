@@ -668,4 +668,4 @@ end
 
 
 -- กลุ่ม
-(local section = PlayerTab:Section({Title = "Ett"})) but with group (local group = Tab:Group())
+(local section = PlayerTab:Section({Title = "Ett"})) but with group (local group = PlayerTab:Group())
