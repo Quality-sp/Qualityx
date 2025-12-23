@@ -665,3 +665,7 @@ if typeof(SprintBar) == "table" and SprintBar.update then
 		return OldUpdate(...)
 	end
 end
+
+
+-- กลุ่ม
+(local section = PlayerTab:Section({Title = "Ett"})) but with group (local group = Tab:Group())
