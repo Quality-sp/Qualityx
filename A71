@@ -188,32 +188,45 @@ end
 -- Render loop – now respects the new toggles
 -- -------------------------------------------------
 RunService.RenderStepped:Connect(function()
-    -- FOV circle visibility
-	SilentFOVCircle.Visible = SilentAimEnabled and ShowFOVEnabled
-	SilentFOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-	SilentFOVCircle.Radius = FOVRadius
-	if SilentAimEnabled then
-		CurrentTarget = getClosestTarget()
-	else
-		CurrentTarget = nil
-	end
-	if CurrentTarget and CurrentTarget.Character and CurrentTarget.Character:FindFirstChild("Head") then
-		local targetHead = CurrentTarget.Character.Head
-		local myHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
-		if myHead then
-			local myScreenPos, myOnScreen = Camera:WorldToViewportPoint(myHead.Position)
-			local targetScreenPos, targetOnScreen = Camera:WorldToViewportPoint(targetHead.Position)
-			if myOnScreen and targetOnScreen then
-				Tracer.Visible = true
-				Tracer.From = Vector2.new(myScreenPos.X, myScreenPos.Y)
-				Tracer.To = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
-			else
-				Tracer.Visible = false
-			end
-		end
-	else
-		Tracer.Visible = false
-	end
+    -- FOV Circle
+    fovCircle.Visible = SilentAimEnabled
+    fovCircle.Position = Vector2.new(
+        Camera.ViewportSize.X / 2,
+        Camera.ViewportSize.Y / 2
+    )
+    fovCircle.Radius = FOV
+
+    -- Silent Aim target
+    if SilentAimEnabled then
+        CurrentTarget = getClosestTarget()
+    else
+        CurrentTarget = nil
+    end
+
+    -- Tracer
+    if CurrentTarget and CurrentTarget.Character and CurrentTarget.Character:FindFirstChild("Head") then
+        local targetHead = CurrentTarget.Character.Head
+        local myHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+
+        if myHead then
+            local myScreenPos, myOnScreen =
+                Camera:WorldToViewportPoint(myHead.Position)
+            local targetScreenPos, targetOnScreen =
+                Camera:WorldToViewportPoint(targetHead.Position)
+
+            if myOnScreen and targetOnScreen then
+                Tracer.Visible = true
+                Tracer.From = Vector2.new(myScreenPos.X, myScreenPos.Y)
+                Tracer.To   = Vector2.new(targetScreenPos.X, targetScreenPos.Y)
+            else
+                Tracer.Visible = false
+            end
+        else
+            Tracer.Visible = false
+        end
+    else
+        Tracer.Visible = false
+    end
 end)
 
 local oldFire
