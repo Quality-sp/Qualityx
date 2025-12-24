@@ -47,7 +47,7 @@ local Window = WindUI:CreateWindow({
         Enabled = true,
         Anonymous = false,
         Name = LocalPlayer.Name,
-        Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId,
+        Image = "rbxassetid://138614699274576",
         Callback = function() end,
     },
 })
